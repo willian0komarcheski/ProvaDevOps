@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  products:
+    build: ./ApiNodeProduct
+    container_name: products
+    ports:
+      - "3001:3001"
+    networks:
+      - ecommerce_network
+
+  orders:
+    build: ./ApiPythonOrder
+    container_name: orders
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+      - redis
+      - products
+    networks:
+      - ecommerce_network
+
+  payments:
+    build: ./ApiPHPPayments
+    container_name: payments
+    ports:
+      - "3003:3003"
+    depends_on:
+      - orders
+    networks:
+      - ecommerce_network
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: ecommerce
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ecommerce_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    networks:
+      - ecommerce_network
+
+networks:
+  ecommerce_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
